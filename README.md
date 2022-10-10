@@ -70,7 +70,7 @@ sudo apt-get remove docker docker-engine docker.io containerd runc
 sudo apt-get update
 
 # Устанавливаем Docker
-sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+sudo apt-get install docker docker-compose
 
 # Проверяем, что все установилось корректно (запускаем образ hello-world)
  sudo service docker start
@@ -102,20 +102,6 @@ POSTGRES_PASSWORD=... # пароль для подключения к БД (ус
 DB_HOST=db # название сервиса (контейнера)
 DB_PORT=5432 # порт для подключения к БД 
 ```
-Если не создать `.env` файл, то проект запустится с данными по умолчанию,
-указанными в файле настроек `infra_sp2/api_yamdb/api_yamdb/settings.py`:
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', 'postgres'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres'),
-        'HOST': os.getenv('DB_HOST', 'db'),
-        'PORT': os.getenv('DB_PORT', '5432')
-    }
-}
-```
 
 ### Запускаем проект
 ```sh
@@ -126,7 +112,7 @@ cd infra_sp2/infra
 sudo docker-compose up -d --build
 
 # Выполняем миграции в контейнере с веб-приложением
-docker-compose exec web python3 manage.py migrate
+sudo docker-compose exec web python3 manage.py migrate
 
 # Выполняем сбор статических файлов в контейнере веб-приложения
 sudo docker-compose exec web python3 manage.py collectstatic --no-input
@@ -139,14 +125,20 @@ sudo docker-compose exec web python3 manage.py createsuperuser
 ### Проверяем
 
 - Переходим в админ панель http://localhost/admin
-- Выполняем вход с данными суперпользователя, который был создан на предыдущем
-шаге.
+![image](https://user-images.githubusercontent.com/94133284/194855765-9d37198f-c740-45e0-84f6-f1c4d51e1217.png)
+
+- Выполняем вход с данными суперпользователя, которого мы создали на предыдущем этапе.
+![image](https://user-images.githubusercontent.com/94133284/194855941-85bc5d37-d477-4c60-8401-1471e0c36676.png)
+
 
 ### Останавливаем проект
 ```sh
 # Остановка с сохранением базы данных и контейнеров
-sudo docker-compose down
+sudo docker-compose stop
 
-# Остановка с удалением всех контейнеров и базы данных
+# Повторный запуск контейнеров
+sudo docker-compose start
+
+# Остановка с удалением всех контейнеров и сохраненных даннных
 sudo docker-compose down -v
 ```
