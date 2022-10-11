@@ -149,3 +149,5 @@ dmypy.json
 static/
 posts/static/
 
+# Database dumps
+fixtures.json

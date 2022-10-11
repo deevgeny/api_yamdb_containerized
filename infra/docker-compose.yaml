@@ -11,7 +11,7 @@ services:
 
   # Web application container
   web:
-    image: evgeny81d/api_yamdb:study
+    image: evgeny81d/api_yamdb:latest
     restart: always
     volumes:
       - static:/app/static/
