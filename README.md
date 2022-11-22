@@ -1,9 +1,11 @@
-# Развертывание многоконтейнерного веб-приложения
+# API Yamdb containerized web application
 
-Цель проекта - практическое применение автоматизации развертывания 
-многоконтейнерного веб-приложения на локальном компьютере.
+In this project we'll use [Docker](https://www.docker.com/) to deploy 
+[api_yamdb](https://github.com/evgeny81d/api_yamdb) web application on local 
+host. 
 
-## Стек технологий
+
+## Technology stack
 - Python 3.7
 - Django 2.2.16
 - Django Filter 21.1
@@ -13,108 +15,96 @@
 - Nginx 1.21.3
 - Gunicorn 20.0.4
 
-## Описание проекта
-В данном проекте используется технология контейнеризации и инструмент 
-[Docker](https://www.docker.com/) для развертывания веб-приложения
-[api_yamdb](https://github.com/evgeny81d/api_yamdb) на локальном компьютере. 
 
-Веб-приложение будет упаковано в три отдельных контейнера:
-- web - контейнер с веб-приложением на фреймворке Django
-- db - контейнер с базой данных postgresql
-- nginx - контейнер с nginx сервером
+## Web application infrastructure
+The web application will be deployed in 3 Docker containers on local host.
 
-### Веб-приложение
-Создано на фрэймворке Django. Работает в отдельном контейнере на WSGI сервере 
-[Gunicorn](https://gunicorn.org/)
+### Web application container
+Django web application. Will run in docker container on WSGI 
+[Gunicorn](https://gunicorn.org/) server.
 
-Более детальную информацию по функционалу приложения можно посмотреть [здесь](https://github.com/evgeny81d/api_yamdb#readme)
+More detailed information about the application is 
+[here](https://github.com/evgeny81d/api_yamdb#readme).
 
-Образ заранее подготовлен и загружен на [dockerhub](https://hub.docker.com/repository/docker/evgeny81d/api_yamdb).
+Docker image is already build and pushed to 
+[DockerHub](https://hub.docker.com/repository/docker/evgeny81d/api_yamdb).
 
-### База данных
-В проекте используется база данных [Postgresql](https://www.postgresql.org/).
+### Database container
+The web application is supposed to work with [Postgresql](https://www.postgresql.org/)
+ database.
 
-### Nginx сервер
-Nginx сервер работает в отдельном контейнере, обеспечивая доступ к приложению,
-а так же раздает статические файлы. В рамках данного проекта используется
-незащищенный протокол [http](https://ru.wikipedia.org/wiki/HTTP).
+### Nginx container
+Nginx sever will be started in a separate container. It will serve http 
+requests and static files. 
 
 
-## Запуск учебного проекта
+## How to install and deploy
 
-Перед запуском проекта необходимо установить Docker на ваш локальный компьютер
-и создать файл с данными доступа к базе.
+Docker should be already installed on local host before deployment.
 
-### Устанавливаем Docker
+### Prepare project infrastructure
+
+1. Clone the repository.
 ```sh
-# Удаляем старые версии Docker
-sudo apt-get remove docker docker-engine docker.io containerd runc
-
-# Обновляем пакеты
-sudo apt-get update
-
-# Устанавливаем Docker
-sudo apt-get install docker docker-compose
-
-# Проверяем, что все установилось корректно (запускаем образ hello-world)
- sudo service docker start
- sudo docker run hello-world
+# Run git clone command
+git clone https://github.com/evgeny81d/api_yamdb_containerized.git
 ```
 
-### Подготавливаем репозиторий и файл с данными доступа к базе
-
-1. Клонируeм репозиторий
-```sh
-# Клонируем репозиторий
-git clone git@github.com:evgeny81d/infra_sp2.git
-```
-
-2. Создаем файл `.env` в каталоге `infra_sp2/infra/`
-с содержимым указанным ниже:
+2. Create `.env` file with secrets in `api_yamdb_containerized/infra/` directory.
 ```python
-# infra_sp2/infra/.env
-# ... - замените своими данными
-DB_ENGINE=django.db.backends.postgresql # указываем, что работаем с postgresql
-DB_NAME=... # имя базы данных (выберите свое)
-POSTGRES_USER=... # логин для подключения к базе данных (установите свой)
-POSTGRES_PASSWORD=... # пароль для подключения к БД (установите свой)
-DB_HOST=db # название сервиса (контейнера)
-DB_PORT=5432 # порт для подключения к БД 
+# Filepath: api_yamdb_containerized/infra/.env
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=# your database name
+POSTGRES_USER=# your database user name
+POSTGRES_PASSWORD=# your database password
+DB_HOST=db
+DB_PORT=5432
 ```
 
-### Запускаем проект
+### Deploy
 ```sh
-# Переходим в каталог с инфраструктурой запуска проекта
-cd infra_sp2/infra
+# Go to the projects infra directory
+cd api_yamdb_containerized/infra
 
-# Запускаем контейнеры
-sudo docker-compose up -d --build
+# Start docker containers
+sudo docker-compose up -d
 
-# Выполняем миграции в контейнере с веб-приложением
+# Run migrations in the web application container
 sudo docker-compose exec web python3 manage.py migrate
 
-# Выполняем сбор статических файлов в контейнере веб-приложения
+# Collect static files in the web application container
 sudo docker-compose exec web python3 manage.py collectstatic --no-input
 
-# Выполняем команду для создания суперпользователя в контейнере веб-приложения
-# и указываем все необходимые данные для нового пользователя
+# Create superuser in the web application container
 sudo docker-compose exec web python3 manage.py createsuperuser
 ```
 
-[http://localhost/redoc/](http://localhost/redoc/) - полная документация API
 
-[http://localhost/admin/](http://localhost/admin) - админ панель веб-приложения
+### Finally the web application is ready for use
+
+[http://localhost/redoc/](http://localhost/redoc/) - API documentation
+
+[http://localhost/admin/](http://localhost/admin) - admin site
 
 
 
-### Способы остановки
+## How to stop containers
 ```sh
-# Остановка с сохранением базы данных и контейнеров
+# Stop and persist the data
 sudo docker-compose stop
 
-# Повторный запуск контейнеров
+# Start containers again
 sudo docker-compose start
 
-# Остановка с удалением всех контейнеров и сохраненных даннных
+# Stop with deleting all data
 sudo docker-compose down -v
 ```
+
+
+## Security notice
+The above instructions how to install and deploy the project have only
+demonstration purpose and can be used on local host. 
+
+If you would like to deploy the project on a web server, please read the 
+[documentation](https://docs.djangoproject.com/en/2.2/howto/deployment/) and
+build your own docker image.
